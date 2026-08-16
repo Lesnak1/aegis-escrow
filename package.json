@@ -1,0 +1,20 @@
+{
+  "name": "aegis-escrow",
+  "version": "1.0.0",
+  "description": "Verifiable AI-Adjudicated Agent Escrow & Milestone Gate for GenLayer",
+  "scripts": {
+    "lint": "genvm-lint check contracts/aegis_escrow.py --json",
+    "test:direct": "pytest tests/direct/ -v",
+    "test:integration": "gltest tests/integration/ -v -s",
+    "test": "npm run test:direct",
+    "deploy": "genlayer deploy contracts/aegis_escrow.py"
+  },
+  "dependencies": {
+    "genlayer-js": "^0.2.7"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  },
+  "author": "Lesnak1",
+  "license": "MIT"
+}
