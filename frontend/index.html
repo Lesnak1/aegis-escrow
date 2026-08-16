@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AegisEscrow — AI-Adjudicated Agent Escrow on GenLayer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-page: #080c14;
+            --bg-card: rgba(15, 23, 42, 0.75);
+            --border-card: rgba(255, 255, 255, 0.08);
+            --border-highlight: rgba(0, 242, 254, 0.3);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --accent-cyan: #00f2fe;
+            --accent-blue: #4facfe;
+            --accent-purple: #8a2be2;
+            --accent-emerald: #00f5a0;
+            --accent-amber: #f59e0b;
+            --accent-rose: #f43f5e;
+            --font-sans: 'Plus Jakarta Sans', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Ambient Glow */
+        .ambient-bg {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 1000px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(0, 242, 254, 0.08) 0%, rgba(138, 43, 226, 0.05) 45%, transparent 70%);
+            filter: blur(100px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1180px;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+
+        /* Navbar */
+        nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: 18px;
+            backdrop-filter: blur(20px);
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #ffffff 0%, var(--accent-cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .network-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--accent-cyan);
+            background: rgba(0, 242, 254, 0.1);
+            border: 1px solid rgba(0, 242, 254, 0.25);
+            padding: 6px 14px;
+            border-radius: 999px;
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-cyan);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--accent-cyan);
+            animation: pulse-anim 1.5s infinite;
+        }
+
+        @keyframes pulse-anim {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.8); }
+        }
+
+        /* Header Hero */
+        .hero {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+            margin: 10px 0 20px;
+        }
+
+        .hero h1 {
+            font-size: 46px;
+            font-weight: 800;
+            letter-spacing: -1.2px;
+            line-height: 1.15;
+            max-width: 840px;
+        }
+
+        .hero h1 span {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 17px;
+            color: var(--text-dim);
+            max-width: 680px;
+            line-height: 1.6;
+        }
+
+        /* Main Dashboard Grid */
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 1.1fr 1fr;
+            gap: 28px;
+        }
+
+        @media (max-width: 900px) {
+            .grid-layout { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: 24px;
+            padding: 28px;
+            backdrop-filter: blur(20px);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            transition: border-color 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: var(--border-highlight);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Form Inputs */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dim);
+        }
+
+        .form-input, .form-textarea {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-card);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 12px rgba(0, 242, 254, 0.25);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .btn-action {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            color: #080c14;
+            font-weight: 700;
+            font-size: 14px;
+            border: none;
+            border-radius: 12px;
+            padding: 14px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 16px rgba(0, 242, 254, 0.25);
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(0, 242, 254, 0.4);
+        }
+
+        /* Adjudication Score Matrix */
+        .score-matrix {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 16px;
+            border-radius: 16px;
+            border: 1px solid var(--border-card);
+        }
+
+        .score-box {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .score-value {
+            font-size: 24px;
+            font-weight: 800;
+            font-family: var(--font-mono);
+            color: var(--accent-cyan);
+        }
+
+        .score-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            letter-spacing: 0.5px;
+        }
+
+        /* Status Badge */
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .status-approved {
+            background: rgba(0, 245, 160, 0.12);
+            color: var(--accent-emerald);
+            border: 1px solid rgba(0, 245, 160, 0.3);
+        }
+
+        .status-pending {
+            background: rgba(245, 158, 11, 0.12);
+            color: var(--accent-amber);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        /* Audit Log */
+        .audit-log {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-card);
+            border-radius: 16px;
+            padding: 16px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: #cbd5e1;
+            max-height: 220px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .log-entry {
+            line-height: 1.5;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            padding-bottom: 4px;
+        }
+
+        .log-time { color: var(--text-dim); }
+        .log-ok { color: var(--accent-emerald); }
+        .log-info { color: var(--accent-cyan); }
+    </style>
+</head>
+<body>
+    <div class="ambient-bg"></div>
+
+    <div class="container">
+        <!-- Navbar -->
+        <nav>
+            <div class="brand-logo">
+                <svg width="28" height="28" viewBox="0 0 98 92" fill="none">
+                    <polygon fill="#00F2FE" points="44.26,32.35 27.72,67.12 43.29,74.9 0,91.93 44.26,0 44.26,32.35"/>
+                    <polygon fill="#8A2BE2" points="53.5,32.35 70.04,67.12 54.47,74.9 97.76,91.93 53.5,0 53.5,32.35"/>
+                    <polygon fill="#00F5A0" points="48.64,43.78 58.33,62.94 48.64,67.69 39.47,62.92 48.64,43.78"/>
+                </svg>
+                AegisEscrow
+            </div>
+            <div class="network-badge">
+                <div class="pulse-dot"></div>
+                GenLayer Bradbury Testnet (4221)
+            </div>
+        </nav>
+
+        <!-- Hero Header -->
+        <div class="hero">
+            <h1>Verifiable AI-Adjudicated <span>Agent Escrow</span></h1>
+            <p>Trustless milestone payouts resolved via multi-validator neural consensus grounded on live GitHub PRs, test suites, and web evidence.</p>
+        </div>
+
+        <!-- Dashboard Grid -->
+        <div class="grid-layout">
+            
+            <!-- Left Card: Create Escrow & Milestone -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">📝 Active Agreement #0x01</div>
+                    <span class="status-pill status-pending" id="agreementStatus">Active Escrow</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Contractor Address</label>
+                    <input type="text" class="form-input" id="contractorInput" value="0x71C...4e38" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Total Escrow Deposit (GEN)</label>
+                    <input type="text" class="form-input" value="100.00 GEN" readonly>
+                </div>
+
+                <hr style="border: none; border-top: 1px solid var(--border-card); margin: 4px 0;">
+
+                <div class="card-title" style="font-size: 15px;">🚩 Current Milestone #1</div>
+
+                <div class="form-group">
+                    <label class="form-label">Milestone Specification</label>
+                    <textarea class="form-textarea" readonly>Implement permit expiration validation in SDK core decrypt pipeline with 100% unit test coverage.</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Verifiable Evidence URL (GitHub PR / CI)</label>
+                    <input type="text" class="form-input" id="evidenceUrl" value="https://api.github.com/repos/sample/sdk/pulls/123">
+                </div>
+
+                <button class="btn-action" id="adjudicateBtn" onclick="runAdjudication()">
+                    ⚖️ Trigger Neural AI Adjudication
+                </button>
+            </div>
+
+            <!-- Right Card: Live Consensus Verdict -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">⚖️ Consensus Adjudication Verdict</div>
+                    <span class="status-pill status-pending" id="verdictPill">Awaiting Evaluation</span>
+                </div>
+
+                <!-- Multi-Axis Score Matrix -->
+                <div class="score-matrix">
+                    <div class="score-box">
+                        <span class="score-value" id="funcScore">--</span>
+                        <span class="score-label">Functional</span>
+                    </div>
+                    <div class="score-box">
+                        <span class="score-value" id="critScore">--</span>
+                        <span class="score-label">Criteria</span>
+                    </div>
+                    <div class="score-box">
+                        <span class="score-value" id="qualScore">--</span>
+                        <span class="score-label">Quality</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Validator Consensus Rationale</label>
+                    <textarea class="form-textarea" id="rationaleText" readonly style="min-height: 65px;">Click 'Trigger Neural AI Adjudication' to execute multi-validator consensus against live evidence.</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Deterministic On-Chain Settlement</label>
+                    <div id="payoutResult" style="font-size: 13px; color: var(--text-dim);">
+                        Pending consensus gate check (Requires >= 70 across all 3 axes + Low/No defects).
+                    </div>
+                </div>
+
+                <!-- Live Audit Stream -->
+                <div class="audit-log" id="auditLog">
+                    <div class="log-entry"><span class="log-time">[System]</span> Initialized AegisEscrow intelligent contract on GenVM.</div>
+                    <div class="log-entry"><span class="log-time">[Escrow]</span> 100.0 GEN locked in ghost contract balance.</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function runAdjudication() {
+            const btn = document.getElementById('adjudicateBtn');
+            const log = document.getElementById('auditLog');
+            btn.innerHTML = "⏳ Simulating Multi-Validator Consensus...";
+            btn.disabled = true;
+
+            function addLog(msg, type='info') {
+                const div = document.createElement('div');
+                div.className = 'log-entry';
+                const time = new Date().toLocaleTimeString();
+                div.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-${type}">${msg}</span>`;
+                log.appendChild(div);
+                log.scrollTop = log.scrollHeight;
+            }
+
+            addLog("Leader validator fetching live evidence from GitHub PR API...", "info");
+
+            setTimeout(() => {
+                addLog("Leader evaluated PR #123: 5 files changed, 24/24 unit tests passing.", "info");
+                addLog("Validators verifying equivalence (±8 pt tolerance check)...", "info");
+
+                setTimeout(() => {
+                    document.getElementById('funcScore').innerText = "92";
+                    document.getElementById('critScore').innerText = "88";
+                    document.getElementById('qualScore').innerText = "95";
+
+                    document.getElementById('verdictPill').className = "status-pill status-approved";
+                    document.getElementById('verdictPill').innerText = "APPROVED (CONSENSUS REACHED)";
+
+                    document.getElementById('rationaleText').value = "5/5 Validators agreed: PR #123 satisfies all core permit validation specs and unit test requirements with zero critical defects.";
+
+                    document.getElementById('payoutResult').innerHTML = "✅ <strong style='color: var(--accent-emerald)'>50.00 GEN Released</strong> to Contractor via external message transfer on finality.";
+
+                    addLog("Consensus reached on 92/88/95 multi-axis scores!", "ok");
+                    addLog("Deterministic Gate: Emitted 50 GEN payout to contractor (0x71C...4e38).", "ok");
+
+                    btn.innerHTML = "✅ Milestone Settled";
+                }, 1200);
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
