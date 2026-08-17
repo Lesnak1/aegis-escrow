@@ -80,11 +80,48 @@ aegis-escrow/
 │   └── aegis_escrow.py        # Core Intelligent Contract on GenVM
 ├── tests/
 │   └── direct/
-│       └── test_aegis_escrow.py  # Foundry-style in-memory direct VM test suite
+│       └── test_aegis_escrow.py  # In-memory direct VM test suite
 ├── frontend/
-│   └── index.html             # Interactive Glassmorphic DApp UI
+│   ├── index.html             # Interactive Glassmorphic DApp UI with live GenLayer client
+│   └── client.ts              # TypeScript GenLayer client integration bindings
+├── package.json               # genlayer-js & development dependencies
 ├── requirements.txt           # Python dependencies (genlayer-test, genvm-linter)
 └── README.md                  # Complete architectural & technical documentation
+```
+
+---
+
+## 💻 Frontend & GenLayer Client Integration
+
+The included interactive DApp (`frontend/index.html`) is connected to the real **`genlayer-js`** client, enabling full on-chain lifecycle management:
+
+1. **Wallet / Account Initialization**: Auto-generates testnet keypairs or imports custom private keys.
+2. **Multi-Network Support**: Switch seamlessly between **GenLayer Bradbury Testnet (4221)**, **StudioNet (4222)**, and **LocalNet**.
+3. **Agreement Creation**: Calls `create_agreement` with payable GEN deposits.
+4. **Milestone Registration**: Executes `add_milestone` with contractual criteria and evidence URLs.
+5. **Neural Adjudication**: Invokes `submit_and_adjudicate_milestone` to trigger live multi-validator consensus.
+6. **Live Contract State Queries**: Dynamically reads `get_agreement` and `get_milestone` to render real multi-axis scores, verdict status, consensus summaries, and on-chain balances.
+
+### TypeScript Client Example (`frontend/client.ts`):
+
+```typescript
+import { getGenLayerClient, createAgreement, addMilestone, submitAndAdjudicateMilestone, getMilestone } from './frontend/client';
+
+const client = getGenLayerClient('0xYourPrivateKey...');
+const contractAddress = '0x74e9242C875fcdd048E5BaB671902A29A5ddBA3c';
+
+// 1. Create Agreement (100 GEN deposit)
+const tx1 = await createAgreement(client, contractAddress, '0xContractorAddress...', 100);
+
+// 2. Add Milestone Specification
+const tx2 = await addMilestone(client, contractAddress, 0, 'Implement permit validation', 'https://github.com/.../pull/1', 50);
+
+// 3. Contractor Submits & Triggers Multi-Validator AI Consensus
+const tx3 = await submitAndAdjudicateMilestone(client, contractAddress, 0, 0, 'Completed with 100% test coverage');
+
+// 4. Query Actual Contract State
+const milestone = await getMilestone(client, contractAddress, 0, 0);
+console.log(`Status: ${milestone.status}, Scores: ${milestone.score_functional}/${milestone.score_criteria}/${milestone.score_quality}`);
 ```
 
 ---
@@ -109,34 +146,6 @@ pytest tests/direct/ -v
 3. `test_refund_unclaimed_balance`:
    - Reverts unauthorized callers attempting to withdraw escrow funds.
    - Validates client reclaiming unspent balance.
-
----
-
-## 🚀 Deployment & Usage
-
-### 1. GenLayer Studio (Browser IDE)
-1. Open [studio.genlayer.com](https://studio.genlayer.com).
-2. Create a new contract file `aegis_escrow.py` and paste `contracts/aegis_escrow.py`.
-3. Deploy to **Studionet** or **Testnet Bradbury** (`Chain ID: 4221`).
-
-### 2. Interaction via GenLayer JS
-```typescript
-import { createClient, createAccount } from 'genlayer-js';
-import { testnetBradbury } from 'genlayer-js/chains';
-
-const client = createClient({
-  chain: testnetBradbury,
-  account: createAccount(),
-});
-
-// Create Agreement with 10 GEN deposit
-const txHash = await client.writeContract({
-  address: AEGIS_ESCROW_ADDRESS,
-  functionName: 'create_agreement',
-  args: ['0xContractorAddress...'],
-  value: BigInt(10) * BigInt(10 ** 18),
-});
-```
 
 ---
 
